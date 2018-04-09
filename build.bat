@@ -1,0 +1,1 @@
+pyinstaller auto_setup.spec
