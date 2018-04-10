@@ -1,9 +1,12 @@
 ﻿import os
 import sys
 import threading
+import re
+import webbrowser
 
 import tkinter as tk  
 from tkinter import ttk  
+from tkinter import Menu  
 from tkinter import messagebox as mBox
 
 from window import *
@@ -13,15 +16,17 @@ from version import GetVersion
 #全局变量
 PROCESS_NAME = "自动安装"
 ICON_NAME = "ico.ico"
-VERSION = 1.0
+VERSION = 1.1
 CHECK_URL = "https://github.com/lingliqianxun/taobao-auto_setup/blob/master/version.txt?raw=true"
 DOWN_URL = "https://github.com/lingliqianxun/taobao-auto_setup/blob/master/dist/auto_setup.exe?raw=true"
 
 
 
 def PathShow():
-    message = "当前目录：\n" + os.getcwd() + "\n\n大多数游戏不支持中文（文件夹）路径，请检查并更改为英文路径！"
-    mBox.showinfo("路径提示（仅仅只是提示，不是错误）", message)
+    path = os.getcwd()
+    if re.search(u"[\u4e00-\u9fa5]+",path):
+        message = "当前目录：\n" + path + "\n\n大多数游戏不支持中文（文件夹）路径，请检查并更改为英文路径！"
+        mBox.showinfo("路径提示", message)
     
 def Check():
     if os.path.exists("文件完整性校验工具.exe") == False:
@@ -40,7 +45,7 @@ def Unrar(action):
     
     for f in os.listdir():
         if ('rar' in f) | ('zip' in f):
-            result = os.system("start winrar x \"%s\"" % f)
+            result = os.system("start winrar e \"%s\"" % f)
             if result == 0:
                 return result,"解压开始，请耐心等待结束..."
             else:
@@ -74,7 +79,6 @@ def Third(action):
                 path = f1 + "\\" + f2
                 if os.path.isdir(path):
                     if (f2 == "_CommonRedist") | (f2 == "_Redist") | (f2 == "__Installer"):
-                        print(path)
                         os.system("start \"\" \"%s\"" % path)
                         if action == 0:
                             return 0,"请自行安装！"
@@ -88,6 +92,9 @@ def Third(action):
       
 def Open():
     return 0,"进游戏目录打开游戏即可。\n\n不知道请阅读【游戏说明.txt】"
+
+def CheckVersion(is_show):
+    threading.Thread(target=GetVersion, args=(win,is_show,PROCESS_NAME,ICON_NAME,VERSION,CHECK_URL,DOWN_URL)).start()
 
 def click_button(num):
     if num == 1:
@@ -117,8 +124,59 @@ def click_button(num):
     else:
         mBox.showwarning(title, message)
 
+def click_menu(name):
+    if name == "shop_qx":
+        url = "https://shop119341111.taobao.com/"
+        webbrowser.open(url)
+    elif name == "shop_jj":
+        url = "https://shop548614869.taobao.com/"
+        webbrowser.open(url)
+    elif name == "game_buyhouse":
+        url = "https://github.com/lingliqianxun/game-buyhouse/blob/master/dist/buyhouse.exe?raw=true"
+        webbrowser.open(url)
+    elif name == "game_home":
+        url = "https://lingliqianxun.github.io/"
+        webbrowser.open(url)
+    elif name == "video_youku":
+        url = "http://i.youku.com/lingliqianxun"
+        webbrowser.open(url)
+    elif name == "video_bili":
+        url = "https://space.bilibili.com/73414137/"
+        webbrowser.open(url)
+    elif name == "version_check":
+        CheckVersion(True)
+    elif name == "version_about":
+        mBox.showinfo("关于本软件", "只用于自助安装\n版本：v%s\n制作：By 绫里千寻"%VERSION)
+
 #界面
 def ViewSet(win):
+    #菜单 
+    menuBar = Menu(win,bg='red',fg='red')
+    
+    shopMenu = Menu(menuBar, tearoff=0)  
+    shopMenu.add_command(label="千寻电玩", command=lambda:click_menu("shop_qx"))  
+    shopMenu.add_command(label="姬机电玩", command=lambda:click_menu("shop_jj"))
+
+    gameMenu = Menu(menuBar, tearoff=0)  
+    gameMenu.add_command(label="买房记", command=lambda:click_menu("game_buyhouse"))
+    gameMenu.add_command(label="主页更多", command=lambda:click_menu("game_home"))
+    gameMenu.add_command(label="敬请期待...") 
+
+    videoMenu = Menu(menuBar, tearoff=0)  
+    videoMenu.add_command(label="优酷", command=lambda:click_menu("video_youku"))  
+    videoMenu.add_command(label="哔哩哔哩", command=lambda:click_menu("video_bili"))
+
+    versionMenu = Menu(menuBar, tearoff=0)  
+    versionMenu.add_command(label="检查更新", command=lambda:click_menu("version_check"))
+    versionMenu.add_command(label="关于", command=lambda:click_menu("version_about"))  
+
+    menuBar.add_cascade(label="店铺", menu=shopMenu)  
+    menuBar.add_cascade(label="更多游戏", menu=gameMenu)
+    menuBar.add_cascade(label="游戏视频", menu=videoMenu)
+    menuBar.add_cascade(label="版本", menu=versionMenu)  
+    win.config(menu=menuBar) 
+
+    #主界面
     ttk.Label(win, text="第一步：", width=15, anchor=tk.E).grid(column=0, row=0, padx=20, pady=20)
     ttk.Button(win,text="自动检查（可跳过）", width=15, command=lambda:click_button(1)).grid(column=1, row=0)
     
@@ -139,7 +197,7 @@ def ViewSet(win):
     ttk.Label(win, text="提示：自动操作失败，请手动操作！", foreground='red').grid(stick='W',column=0, row=5, columnspan=3, padx=60, pady=20)
     
     ttk.Label(win, text="其他注意事项：").grid(stick='EN', column=0, row=6, padx=0, pady=0)
-    ttk.Label(win, text="1.配置是否达标\n2.英文路径\n3.更新所有驱动\n4.笔记本切换独立显卡\n5.关闭杀毒").grid(stick='W', column=1, row=6, columnspan=3, padx=0, pady=0)
+    ttk.Label(win, text="1.配置是否达标\n2.放英文路径\n3.更新所有驱动\n4.笔记本切换独立显卡\n5.关闭杀毒\n6.不要在网盘中打开").grid(stick='W', column=1, row=6, columnspan=3, padx=0, pady=0)
 
 
 if __name__ == "__main__":
@@ -147,7 +205,7 @@ if __name__ == "__main__":
     win = tk.Tk()       
     win.title("自助安装工具v"+str(VERSION))  
     #win.resizable(0,0)
-    WindowSizeCenter(win,460,500)
+    WindowSizeCenter(win,460,510)
     win.iconbitmap(WindowResourcePath(ICON_NAME))
     
     ViewSet(win)
@@ -156,6 +214,6 @@ if __name__ == "__main__":
     PathShow()
 
     #查询版本
-    threading.Thread(target=GetVersion, args=(win,PROCESS_NAME,ICON_NAME,VERSION,CHECK_URL,DOWN_URL)).start()
+    CheckVersion(False)
 
     win.mainloop()
