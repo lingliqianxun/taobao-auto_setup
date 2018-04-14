@@ -45,7 +45,7 @@ def Unrar(action):
     
     for f in os.listdir():
         if ('rar' in f) | ('zip' in f):
-            result = os.system("start winrar e \"%s\"" % f)
+            result = os.system("start winrar x \"%s\"" % f)
             if result == 0:
                 return result,"解压开始，请耐心等待结束..."
             else:
