@@ -25,8 +25,45 @@ DOWN_URL = "https://github.com/lingliqianxun/taobao-auto_setup/blob/master/dist/
 def PathShow():
     path = os.getcwd()
     if re.search(u"[\u4e00-\u9fa5]+",path):
-        message = "当前目录：\n" + path + "\n\n大多数游戏不支持中文（文件夹）路径，请检查并更改为英文路径！"
-        mBox.showinfo("路径提示", message)
+        toplevel_path = tk.Toplevel(win)
+        toplevel_path.title("路径提示")
+        toplevel_path.iconbitmap(WindowResourcePath(ICON_NAME))
+        WindowSizeCenter(toplevel_path, 500,250)
+
+        ttk.Label(toplevel_path, text="", foreground='red', anchor=tk.W).grid(stick='W',column=0, row=0, padx=50, pady=5)
+        ttk.Label(toplevel_path, text="✖错误路径样例：F:\\game\\极品飞车\\game\\", foreground='red', anchor=tk.W).grid(stick='W',column=0, row=1, padx=50, pady=0)
+        ttk.Label(toplevel_path, text="✔正确路径样例：F:\\game\\Need For Speed\\game\\", foreground='green', anchor=tk.W).grid(stick='W',column=0, row=2, padx=50, pady=0)
+        ttk.Label(toplevel_path, text="", foreground='red', anchor=tk.W).grid(stick='W',column=0, row=3, padx=50, pady=5)
+
+
+        path_text = "✖当前路径：" + path
+        new_text = ""
+        count = 1
+        for p in range(0,len(path_text)):
+            new_text += path_text[p]
+            
+            if re.search(u"[\u4e00-\u9fa5]+",path_text[p]):
+                count += 2
+            else:
+                count += 1
+                
+            if count > 62:
+                new_text += '\n'
+                count = 0
+            
+        ttk.Label(toplevel_path, text=new_text, foreground='red', anchor=tk.W).grid(stick='W',column=0, row=4, padx=50, pady=0)
+
+
+        ttk.Label(toplevel_path, text="提示：大多数游戏不支持中文（文件夹）路径，请检查并更改为英文路径！", anchor=tk.W).grid(stick='W',column=0, row=5, padx=50, pady=20)
+        
+        toplevel_path.grab_set()
+        toplevel_path.focus()
+
+    #弹框模式
+    #path = os.getcwd()   
+    #if re.search(u"[\u4e00-\u9fa5]+",path):
+    #    message = "当前目录：\n" + path + "\n\n大多数游戏不支持中文（文件夹）路径，请检查并更改为英文路径！"
+    #    mBox.showinfo("路径提示", message)
     
 def Check():
     if os.path.exists("文件完整性校验工具.exe") == False:
@@ -78,7 +115,7 @@ def Third(action):
             for f2 in os.listdir(f1):
                 path = f1 + "\\" + f2
                 if os.path.isdir(path):
-                    if (f2 == "_CommonRedist") | (f2 == "_Redist") | (f2 == "__Installer"):
+                    if (f2 == "_CommonRedist") | (f2 == "_Redist") | (f2 == "Redist") | (f2 == "redist") | (f2 == "__Installer"):
                         os.system("start \"\" \"%s\"" % path)
                         if action == 0:
                             return 0,"请自行安装！"
